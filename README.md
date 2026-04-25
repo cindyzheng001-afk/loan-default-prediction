@@ -51,4 +51,4 @@ cd dashboard
 streamlit run app.py
 
 ## Author
-Cindy Zheng | Data Analytics Capstone 2025
+Cindy Zheng | Data Analytics Capstone 2026
