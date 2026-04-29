@@ -16,9 +16,10 @@ st.set_page_config(
 @st.cache_resource
 def load_model():
     model = joblib.load(r'C:\Users\czhen\Desktop\loan-default-prediction\models\xgb_model.pkl')
-    return model
+    explainer = shap.TreeExplainer(model)
+    return model, explainer
 
-xgb_model = load_model()
+xgb_model, explainer = load_model()
 
 # ── HEADER ──
 st.title("🏦 Loan Default Prediction Dashboard")
@@ -88,11 +89,12 @@ col3.metric("Decision", decision)
 
 st.divider()
 
-# ── THRESHOLD SIMULATOR ──
-st.subheader("📊 Threshold Business Impact")
-col1, col2 = st.columns(2)
+# ── TWO COLUMN LAYOUT ──
+left, right = st.columns(2)
 
-with col1:
+with left:
+    # Loan summary table
+    st.subheader("📋 Loan Summary")
     st.markdown(f"""
     | Metric | Value |
     |--------|-------|
@@ -102,15 +104,19 @@ with col1:
     | Loan Amount | ${loan_amnt:,} |
     | Grade | {grade} |
     | FICO Score | {fico} |
+    | Annual Income | ${annual_inc:,} |
+    | DTI | {dti} |
+    | Purpose | {purpose} |
     """)
 
-with col2:
-    # Gauge chart
-    fig, ax = plt.subplots(figsize=(4, 3))
+with right:
+    # Risk gauge
+    st.subheader("🎯 Risk Gauge")
+    fig, ax = plt.subplots(figsize=(5, 3))
     ax.barh(['Risk Score'], [prob], color=color, height=0.3)
-    ax.barh(['Risk Score'], [1 - prob], left=[prob], 
+    ax.barh(['Risk Score'], [1 - prob], left=[prob],
              color='lightgray', height=0.3)
-    ax.axvline(x=threshold, color='black', linestyle='--', 
+    ax.axvline(x=threshold, color='black', linestyle='--',
                 label=f'Threshold ({threshold:.0%})')
     ax.set_xlim(0, 1)
     ax.set_title('Default Risk Gauge')
@@ -118,4 +124,31 @@ with col2:
     st.pyplot(fig)
 
 st.divider()
-st.markdown("*Built by Cindy Zheng | Capstone Project 2025*")
+
+# ── SHAP EXPLANATION ──
+st.subheader("🔍 SHAP Explanation — Why did the model make this decision?")
+
+shap_values = explainer.shap_values(input_df)
+
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+shap.plots.waterfall(
+    shap.Explanation(
+        values=shap_values[0],
+        base_values=explainer.expected_value,
+        data=input_df.iloc[0],
+        feature_names=input_df.columns.tolist()
+    ),
+    show=False
+)
+plt.tight_layout()
+st.pyplot(fig2)
+
+st.markdown("""
+**How to read this chart:**
+- 🔴 **Red bars** push the prediction toward default
+- 🔵 **Blue bars** push the prediction away from default  
+- The final score is the sum of all bars starting from the baseline
+""")
+
+st.divider()
+st.markdown("*Built by Cindy Zheng | Capstone Project 2026*")
