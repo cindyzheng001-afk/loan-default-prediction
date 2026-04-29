@@ -5,12 +5,14 @@ A machine learning pipeline to predict loan defaults using 2.2M LendingClub loan
 ## Business Problem
 Lenders lose billions annually to loan defaults. This project builds an explainable ML model that predicts default risk before a loan is issued, with a business-focused threshold simulator showing the dollar impact of different risk tolerances.
 
+This project uses a 3-class classification approach: Fully Paid, Early Delinquency (16–30 days late), and Default — providing lenders a more nuanced risk signal than binary classification.
+
 ## Results
 | Model | AUC Score | Default Recall |
 |-------|-----------|----------------|
-| Logistic Regression | 0.7041 | 9% |
-| Random Forest + SMOTE | 0.6905 | 38% |
-| XGBoost + SMOTE | 0.7131 | 11% |
+| Logistic Regression | 0.7006 | 9% |
+| Random Forest + SMOTE | 0.6552 | 33% |
+| XGBoost + SMOTE | 0.6832 | 11% |
 
 **Optimal threshold (0.30):** Saves $384M while maintaining reasonable approval rates.
 
@@ -18,6 +20,7 @@ Lenders lose billions annually to loan defaults. This project builds an explaina
 - Loan grade is the strongest single predictor (6.7% default at Grade A vs 51.1% at Grade G)
 - SHAP analysis revealed loan purpose is the #1 feature — debt consolidation loans carry the highest systemic risk
 - Lowering decision threshold from 0.50 to 0.30 saves an additional $294M but rejects 39,000 more good loans
+- Switching to multiclass classification separates Early Delinquency loans from confirmed defaults, reducing label noise and giving lenders an actionable middle-tier risk signal.
 
 ## Tech Stack
 - **Python** — pandas, numpy, scikit-learn, xgboost, shap, imbalanced-learn
